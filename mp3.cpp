@@ -33,7 +33,7 @@ int main(int argc, char** args) {
 			return 1;
 	}
 
-	if (args[1][0] == 's') {
+	if (args[1][0] == 't') {
 
 	} 
 	return 0;
