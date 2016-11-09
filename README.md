@@ -1,1 +1,3 @@
-# naive_bayes_clarification
+# AI-mp3
+# Zhengbang Chen
+# Guangzhe Cui
