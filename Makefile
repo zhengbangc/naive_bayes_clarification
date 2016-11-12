@@ -10,8 +10,8 @@ all : $(EXE)
 $(EXE) : $(OBJS)
 	$(LINKER) $(OBJS) -o $(EXE)
 
-textClassification.o : textClassification.h textClassification.cpp
-	$(COMPILER) $(COMPILER_OPTS) textClassification.cpp
+# textClassification.o : textClassification.h textClassification.cpp
+	# $(COMPILER) $(COMPILER_OPTS) textClassification.cpp
 
 clean :
 	-rm -f *.o $(EXE)
