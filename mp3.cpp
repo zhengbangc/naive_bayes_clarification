@@ -12,6 +12,7 @@
 #include <cmath> //C++11
 #include <chrono> // C++11
 #include <unordered_map>
+#include <iomanip>
 using namespace std;
 
 /** 
@@ -23,6 +24,222 @@ using namespace std;
 * for game of breakthrough
 */
 int main(int argc, char** args) {
+	if (args[1][0]=='d')
+	{
+		//P(Fij = f | class) = (# of times pixel (i,j) has value f in training examples from this class) / (Total # of training examples from this class)
+		//training phase
+	  	string line;
+	  	int vec[28];
+	  	int matrix[28*28*10];
+	  	float confusion_matrix[100];
+	  	for(int i =0;i<28*28*10;i++)
+	  	{
+	  		matrix[i]=0;
+	  	}
+		ifstream trainingimages ("./digitdata/trainingimages");
+		ifstream traininglabels ("./digitdata/traininglabels");
+		int j=0;
+		// double count[10];
+		double pclass[10];
+
+		while(traininglabels.is_open()&&trainingimages.is_open())
+		{
+
+			getline (traininglabels,line);
+			if(line=="")
+				break;
+			int number=stoi(line);
+			pclass[number]++;
+			// int a;
+			// cout<<"reading the label: "<<number<<endl;
+			// cin>>a;
+			//j is the next line
+			// cout<<"the image is :"<<endl;
+		    while ( getline (trainingimages,line))
+		    {
+			    for(int i =0;i<28;i++)
+			    {
+
+			    	if(line[i]=='+'||line[i]=='#'){
+						matrix[number*28*28+j*28+i]++;
+			    	// cout<<matrix[number*28*28+j*28+i];	
+			    	}
+			    	// else
+			    		// cout<<' ';
+			   	}
+			   	// cout<<endl;
+		    
+		    if(j==27)
+		    {
+		    	j=0;
+		    	break;
+		    }
+		    j++;
+
+		   }
+		}
+	
+//testing phase
+	cout<<"finished training"<<endl;
+	ifstream testimages ("./digitdata/testimages");
+	ifstream testlabels ("./digitdata/testlabels");
+	cout<<"start testing"<<endl;
+	j=0;
+	int correctones;
+	// for(int i=0;i<100;i++){
+	// 	confusion_matrix[i]=1;
+	// }
+	int appearance[10];
+	double AP[10];
+	float smoothing=0.1;
+
+	while(testimages.is_open()&&testlabels.is_open())
+	{
+		getline (testlabels,line);
+		for(int i=0;i<10;i++){
+				AP[i]=log(double(pclass[i]+2*smoothing)/double(5000+2*10*smoothing));
+				// cout<<"the possibloity of number "<< i<<" is "<< AP[i]<<endl;
+				// cout<<"the numer of this class is "<<pclass[i]<<endl;
+		}
+		// cout<<"the line is :"<<line<<endl;
+		if(line=="")
+			break;
+		int number=stoi(line);
+		int a;
+		// cout<<"reading the test label: "<<number<<endl;
+		// cin>>a;
+		//j is the next line
+		// cout<<"the image is :"<<endl;
+	    while ( getline (testimages,line))
+	    {
+
+		    for(int i =0;i<28;i++)
+		    {
+
+		    	if(line[i]=='+'||line[i]=='#'){
+		    		for(int m=0;m<10;m++){
+					AP[m]=AP[m]+log(double(matrix[m*28*28+j*28+i]+smoothing))-log(double(pclass[m]+2*smoothing));		
+		    		}			   
+		    	}
+		    	else
+		    		{
+		    		for(int m=0;m<10;m++){
+					AP[m]=AP[m]+log(double(pclass[m]+smoothing-matrix[m*28*28+j*28+i]))-log(double(pclass[m]+2*smoothing));			    			
+		    		}
+		    	}
+		   	}
+		   	// cout<<endl;
+		    	// cout<<"AP 1 is "<<(double)AP[2]<<endl;
+		    	// cout<<"AP 1 is "<<(double)(matrix[1*28*28+1*28+1]+smoothing)/double(pclass[1]+2*smoothing)<<endl;
+	    
+	    if(j==27)
+	    {
+	    	j=0;
+	    	double max=-INFINITY;
+	    	int index=0;
+	    	for(int i=0;i<10;i++)
+	    	{
+	    		if(AP[i]>=max)
+	    		{
+	    			max=AP[i];
+	    			index=i;
+	    			// cout<<"the most likely value is"<<AP[i]<<endl;
+	    		}
+	    	}
+	    	// cout<<"the number should be: "<<index;
+	    	if(index==number){
+	    		correctones++;
+	    	}
+	    	else
+	    	{
+	    		// row is the testing label, column is the estimation
+	    		confusion_matrix[number*10+index]=confusion_matrix[number*10+index]+1;
+	    		// cout<<"wrong :"<<"should be  "<<number<<"but estimation is "<<index<<endl;
+	    	}
+    		appearance[number]++;
+
+	    	// cin>>index;
+	    	break;
+	    }
+	    j++;
+
+	   }
+	}
+		double accuracy=correctones;
+		cout<<"accuracy is: "<<(double)accuracy/1000<<endl;
+		// cout<<"label count"<<count<<endl;
+		for(int i=0;i<100;i++)
+		{
+			confusion_matrix[i]=confusion_matrix[i]/(appearance[i/10]);
+		}
+		//Odds ratio testing
+		float one,two,three,four;
+		int onea,oneb,twoa,twob,threea,threeb,foura,fourb;
+			for(int a=0;a<10;a++){
+				for(int b=a+1;b<10;b++)
+				{
+					if(confusion_matrix[a*10+b]>one)
+					{
+						four=three;
+						foura=threea;
+						fourb=threeb;
+						three=two;
+						threea=twoa;
+						threeb=twob;
+						twoa=onea;
+						twob=oneb;
+						two=one;
+						onea=a;
+						oneb=b;
+						one=confusion_matrix[10*a+b];
+					}
+					else if(confusion_matrix[a*10+b]>two)
+					{
+						four=three;
+						foura=threea;
+						fourb=threeb;
+						three=two;
+						threea=twoa;
+						threeb=twob;
+						twoa=a;
+						twob=b;
+						two=confusion_matrix[10*a+b];
+					}
+					else if(confusion_matrix[a*10+b]>three)
+					{
+						four=three;
+						foura=threea;
+						fourb=threeb;
+						threea=a;
+						threeb=b;
+						three=confusion_matrix[10*a+b];
+					}
+					else if(confusion_matrix[a*10+b]>four)
+					{
+						foura=a;
+						fourb=b;
+						four=confusion_matrix[10*a+b];
+					}	
+
+				}
+			}
+
+		cout<<"top confusing pair is: " <<onea<<" "<<oneb<<endl;
+		cout<<"second confusing pair is"<<twoa<<" "<<twob<<endl;
+		cout<<"third confusing pair is"<<threea<<" "<<threeb<<endl;
+		cout<<"fourth confusing pair is"<<foura<<" "<<fourb<<endl;
+		std::cout << std::setprecision(5) << std::fixed;
+		for(int i=0;i<10;i++)
+		{
+			for(int k=0;k<10;k++)
+			{
+			cout<<"\t"<<confusion_matrix[i*10+k];				
+			}
+			cout<<endl;
+		}
+
+	}		
+
 
 	//part 2
 	if (args[1][0] == 't') {
