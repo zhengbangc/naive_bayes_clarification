@@ -38,6 +38,10 @@ namespace Color {
     };
 }
 
+bool sort_dict (const pair<string, int>  lhs, const pair<string, int>  rhs) {
+	return lhs.second > rhs.second;
+}
+
 /** 
 * Main function
 * args[1] = part 1 or 2
@@ -306,6 +310,7 @@ int main(int argc, char** args) {
 
 		//multinomial model
 		if (args[2][0] == 'm') { 
+			cout << yellow << "Using multinomial model" << def << endl;
 			ifstream trainfile(args[3]);
 			ifstream testfile(args[4]);
 			string line;
@@ -434,16 +439,61 @@ int main(int argc, char** args) {
 				}
 			}
 
+			int estimated_positive_correct_negative = 0;
+			int estimated_positive_correct_positive = 0;
+			int estimated_negative_correct_positive = 0;
+			int estimated_negative_correct_negative = 0;
 			int number_correct = 0;
 			for (int i = 0; i < correct_classification.size(); i++) {
 				if (estimate_classification[i] == correct_classification[i]) {
 					number_correct++;
 				}
+				if (estimate_classification[i] == 1 && correct_classification[i] == -1)
+					estimated_positive_correct_negative++;
+				else if (estimate_classification[i] == 1 && correct_classification[i] == 1)
+					estimated_positive_correct_positive++;
+				else if (estimate_classification[i] == -1 && correct_classification[i] == 1)
+					estimated_negative_correct_positive++;
+				else if (estimate_classification[i] == -1 && correct_classification[i] == -1)
+					estimated_negative_correct_negative++;
 			}
-			cout << "the accuracy is " << red << (double)number_correct/(double)correct_classification.size() << def << endl;
+			cout <<"The confusion matrix:" << endl;
+			cout << blue << "		estimated positive | estimated negative" << endl;
+			cout << "correct positive 	" << estimated_positive_correct_positive << "  	   |	    " << estimated_negative_correct_positive << endl;
+			cout << "correct negative 	" << estimated_positive_correct_negative << "	   |	    " << estimated_negative_correct_negative << def << endl;
+			cout << "the accuracy is " << red << (double)number_correct/(double)correct_classification.size() << def << endl << endl;
+
+
+			vector<std::pair<string, int> >sorted_positive_dict (positive_dict.begin(), positive_dict.end());
+			std::sort(sorted_positive_dict.begin(), sorted_positive_dict.end(), sort_dict);
+			cout << "The top 10 words with the highest likelihood for " << green << "-1: " <<def << endl;
+			for (int i = 0; i < 10; i++) {
+				cout << green << sorted_positive_dict[i].first << def << " occurs " << green << sorted_positive_dict[i].second<< def << " times "  << endl;
+			}
+			vector<std::pair<string, int> >sorted_negative_dict (negative_dict.begin(), negative_dict.end());
+			std::sort(sorted_negative_dict.begin(), sorted_negative_dict.end(), sort_dict);
+			cout << "The top 10 words with the highest likelihood for " << green << "-1: " <<def << endl;
+			for (int i = 0; i < 10; i++) {
+				cout << green << sorted_negative_dict[i].first << def << " occurs " << green << sorted_negative_dict[i].second<< def << " times "  << endl;
+			}
+
+			cout << "The top 10 words with the highest odds ratio " << green << "log((P(w|positive)/P(w|negative)))" << def<< endl;
+			std::vector<pair<string, double> > sorted_positive_odds_ratio;
+			for (int i = 0; i < sorted_positive_dict.size() ; i++) {
+				// cout << green << sorted_positive_dict[i].first << def << " occurs " << green << sorted_negative_dict[i].second<< def << " times "  << endl;
+				string curWord = sorted_positive_dict[i].first;
+				double positive_possibility = log10((double)(positive_dict[curWord] + 1) / (double)(total_positive_count + positive_dict.size()));
+				double negative_possibility = log10((double)(negative_dict[curWord] + 1) / (double)(total_negative_count + negative_dict.size()));
+				sorted_positive_odds_ratio.push_back(make_pair(curWord, positive_possibility - negative_possibility) );
+			}
+			std::sort(sorted_positive_odds_ratio.begin(), sorted_positive_odds_ratio.end(), sort_dict);
+			for (int i = 0; i < 10; i++) {
+				cout << green << sorted_positive_odds_ratio[i].first << def << " with log((P(w|positive)/P(w|negative))) " << green << sorted_positive_odds_ratio[i].second<< def  << endl;
+			}
 
 		}
 		if (args[2][0] == 'b') { 
+			cout << yellow << "Using Bernoulli model" << def << endl;
 			ifstream trainfile(args[3]);
 			ifstream testfile(args[4]);
 			string line;
@@ -511,7 +561,7 @@ int main(int argc, char** args) {
 			while (getline(testfile, line)) {
 				if (line.size() == 0)
 					continue;
-				//first prepare for the correct answer to calculate the accuracy
+				//first prepare for thate correct answer to calculate the accuracy
 				if (line[0] == '-') {
 					correct_classification.push_back(-1);
 					i = 3;
@@ -562,15 +612,55 @@ int main(int argc, char** args) {
 				}
 			}
 
+			int estimated_positive_correct_negative = 0;
+			int estimated_positive_correct_positive = 0;
+			int estimated_negative_correct_positive = 0;
+			int estimated_negative_correct_negative = 0;
 			int number_correct = 0;
 			for (int i = 0; i < correct_classification.size(); i++) {
 				if (estimate_classification[i] == correct_classification[i]) {
 					number_correct++;
 				}
+				if (estimate_classification[i] == 1 && correct_classification[i] == -1)
+					estimated_positive_correct_negative++;
+				else if (estimate_classification[i] == 1 && correct_classification[i] == 1)
+					estimated_positive_correct_positive++;
+				else if (estimate_classification[i] == -1 && correct_classification[i] == 1)
+					estimated_negative_correct_positive++;
+				else if (estimate_classification[i] == -1 && correct_classification[i] == -1)
+					estimated_negative_correct_negative++;
 			}
-			cout << "the accuracy is " << red << (double)number_correct/(double)correct_classification.size() << def << endl;
+			cout <<"The confusion matrix:" << endl;
+			cout << blue << "		estimated positive | estimated negative" << endl;
+			cout << "correct positive 	" << estimated_positive_correct_positive << "  	   |	    " << estimated_negative_correct_positive << endl;
+			cout << "correct negative 	" << estimated_positive_correct_negative << "	   |	    " << estimated_negative_correct_negative << def << endl;
+			cout << "the accuracy is " << red << (double)number_correct/(double)correct_classification.size() << def << endl << endl	;
 
+			vector<std::pair<string, int> >sorted_positive_dict (positive_dict.begin(), positive_dict.end());
+			std::sort(sorted_positive_dict.begin(), sorted_positive_dict.end(), sort_dict);
+			cout << "The top 10 words with the highest likelihood for " << green << "-1: " <<def << endl;
+			for (int i = 0; i < 10; i++) {
+				cout << green << sorted_positive_dict[i].first << def << " occurs " << green << sorted_positive_dict[i].second<< def << " times "  << endl;
+			}
+			vector<std::pair<string, int> >sorted_negative_dict (negative_dict.begin(), negative_dict.end());
+			std::sort(sorted_negative_dict.begin(), sorted_negative_dict.end(), sort_dict);
+			cout << "The top 10 words with the highest likelihood for " << green << "-1: " <<def << endl;
+			for (int i = 0; i < 10; i++) {
+				cout << green << sorted_negative_dict[i].first << def << " occurs " << green << sorted_negative_dict[i].second<< def << " times "  << endl;
+			}
 
+			cout << "The top 10 words with the highest odds ratio " << green << "log((P(w|positive)/P(w|negative)))" << def<< endl;
+			std::vector<pair<string, double> > sorted_positive_odds_ratio;
+			for (int i = 0; i < sorted_positive_dict.size() ; i++) {
+				string curWord = sorted_positive_dict[i].first;
+				double positive_possibility = log10((double)(positive_dict[curWord] + 1) / (double)(total_positive_count + positive_dict.size()));
+				double negative_possibility = log10((double)(negative_dict[curWord] + 1) / (double)(total_negative_count + negative_dict.size()));
+				sorted_positive_odds_ratio.push_back(make_pair(curWord, positive_possibility - negative_possibility) );
+			}
+			std::sort(sorted_positive_odds_ratio.begin(), sorted_positive_odds_ratio.end(), sort_dict);
+			for (int i = 0; i < 10; i++) {
+				cout << green << sorted_positive_odds_ratio[i].first << def << " with log((P(w|positive)/P(w|negative)))= " << green << sorted_positive_odds_ratio[i].second<< def  << endl;
+			}
 		}
 	} 
 	return 0;
