@@ -248,22 +248,48 @@ int main(int argc, char** args) {
 			}
 
 		cout<<"top confusing pair is: " <<onea<<" "<<oneb<<endl;
-		cout<<"second confusing pair is"<<twoa<<" "<<twob<<endl;
-		cout<<"third confusing pair is"<<threea<<" "<<threeb<<endl;
-		cout<<"fourth confusing pair is"<<foura<<" "<<fourb<<endl;
-		std::cout << std::setprecision(5) << std::fixed;
-		for(int i=0;i<10;i++)
-		{
-			for(int k=0;k<10;k++)
-			{
-			cout<<"\t"<<confusion_matrix[i*10+k];				
+		cout<<"the probility map for 4 is "<<endl;
+		int m=3;
+		cout<<"four=[";
+// 		top confusing pair is: 4 9
+// 		second confusing pair is7 9
+// 		third confusing pair is8 9
+// 		fourth confusing pair is3 7
+		for(int i=0;i<28;i++){
+			for(j=0;j<28;j++){
+				cout<<log(double(matrix[m*28*28+i*28+j]+smoothing)/double(pclass[m]+2*smoothing))<<" ";
 			}
-			cout<<endl;
+			cout<<";";
 		}
+		cout<<"]"<<endl;
+		// cout<<endl<<"the probility map for 9 is "<<endl;
+		int n=7;
+		cout<<"nine=[";
+// 		top confusing pair is: 4 9
+// 		second confusing pair is7 9
+// 		third confusing pair is8 9
+// 		fourth confusing pair is3 7
+		for(int i=0;i<28;i++){
+			for(j=0;j<28;j++){
+				cout<<log(double(matrix[n*28*28+i*28+j]+smoothing)/double(pclass[n]+2*smoothing))<<" ";
+			}
+			cout<<";";
+		}
+		cout<<"]"<<endl;
+		cout<<"fournineodds=[";
+// 		top confusing pair is: 4 9
+// 		second confusing pair is7 9
+// 		third confusing pair is8 9
+// 		fourth confusing pair is3 7
 
-	}		
-
-
+		for(int i=0;i<28;i++){
+			for(j=0;j<28;j++){
+				cout<<log(double(matrix[m*28*28+i*28+j]+smoothing)/double(pclass[m]+2*smoothing))-log(double(matrix[n*28*28+i*28+j]+smoothing)/double(pclass[n]+2*smoothing))<<" ";
+			}
+			cout<<";";
+		}
+		cout<<"]"<<endl;
+	}
 	Color::Modifier red(Color::FG_RED);
 	Color::Modifier def(Color::FG_DEFAULT);
 	Color::Modifier blue(Color::FG_BLUE);
